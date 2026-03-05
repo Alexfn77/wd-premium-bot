@@ -1,8 +1,9 @@
+import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputFile
 from aiogram.utils import executor
 
-BOT_TOKEN = "8292107357:AAFkF7If0XZO5Lbs-OulC48R_DICNs_pizk"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
