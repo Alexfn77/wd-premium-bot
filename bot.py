@@ -1,4 +1,7 @@
 import os
+import requests
+
+CRYPTO_TOKEN = "561572:AArX58l2f8iHAZUqJWVae4rr1IQtiR8O6uy"
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputFile
 from aiogram.utils import executor
@@ -7,6 +10,25 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
+
+def create_invoice(amount, description):
+    url = "https://pay.crypt.bot/api/createInvoice"
+    headers = {
+        "Crypto-Pay-API-Token": CRYPTO_TOKEN
+    }
+    data = {
+        "asset": "USDT",
+        "amount": amount,
+        "description": description
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+    result = response.json()
+
+    if result["ok"]:
+        return result["result"]["pay_url"]
+    else:
+        return None
 
 
 # ===== ГЛАВНОЕ МЕНЮ =====
@@ -47,8 +69,8 @@ async def premium(callback_query: types.CallbackQuery):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("💎 1 месяц — 199 ₽", callback_data="sub1"),
-        InlineKeyboardButton("💎 1.5 месяца — 279 ₽", callback_data="sub15"),
         InlineKeyboardButton("💎 2 месяца — 349 ₽", callback_data="sub2"),
+        InlineKeyboardButton("💎 3 месяца — 499 ₽", callback_data="sub3"),
         InlineKeyboardButton("⬅ Назад", callback_data="back")
     )
 
@@ -188,6 +210,56 @@ async def custom(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "back")
 async def back(callback_query: types.CallbackQuery):
     await start(callback_query.message)
+
+@dp.callback_query_handler(lambda c: c.data == "sub1")
+async def sub1(callback_query: types.CallbackQuery):
+
+    pay_url = create_invoice(2, "WD Premium 1 month")
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton("💳 Оплатить", url=pay_url)
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        "💎 Подписка на 1 месяц\n\nНажмите кнопку ниже для оплаты.",
+        reply_markup=keyboard
+    )
+
+
+@dp.callback_query_handler(lambda c: c.data == "sub2")
+async def sub2(callback_query: types.CallbackQuery):
+
+    pay_url = create_invoice(4, "WD Premium 2 months")
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton("💳 Оплатить", url=pay_url)
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        "💎 Подписка на 2 месяца\n\nНажмите кнопку ниже для оплаты.",
+        reply_markup=keyboard
+    )
+
+
+@dp.callback_query_handler(lambda c: c.data == "sub3")
+async def sub3(callback_query: types.CallbackQuery):
+
+    pay_url = create_invoice(6, "WD Premium 3 months")
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton("💳 Оплатить", url=pay_url)
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        "💎 Подписка на 3 месяца\n\nНажмите кнопку ниже для оплаты.",
+        reply_markup=keyboard
+    )
 
 
 if __name__ == "__main__":
