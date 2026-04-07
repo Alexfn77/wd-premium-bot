@@ -1,13 +1,16 @@
 import os
 import requests
 
-CRYPTO_TOKEN = "561572:AArX58l2f8iHAZUqJWVae4rr1IQtiR8O6uy"
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputFile
 from aiogram.utils import executor
 
+# ===== ТОКЕНЫ =====
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+CRYPTO_TOKEN = "561572:AAdgX8dZ3dqWIUcIi2LBccNdRV0zBKZF497"
+ADMIN_ID = 7733841337
 
+# ===== ИНИЦИАЛИЗАЦИЯ =====
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
@@ -211,54 +214,188 @@ async def custom(callback_query: types.CallbackQuery):
 async def back(callback_query: types.CallbackQuery):
     await start(callback_query.message)
 
+
+# ===== SUB1 =====
 @dp.callback_query_handler(lambda c: c.data == "sub1")
 async def sub1(callback_query: types.CallbackQuery):
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton("💳 Перейти к оплате", callback_data="pay1"),
+        InlineKeyboardButton("⬅ Назад", callback_data="premium")
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        "💎 <b>Подписка на 1 месяц</b>\n\nСтоимость: 3 USDT",
+        parse_mode="HTML",
+        reply_markup=keyboard
+    )
+
+
+@dp.callback_query_handler(lambda c: c.data == "pay1")
+async def pay1(callback_query: types.CallbackQuery):
 
     pay_url = create_invoice(3, "WD Premium 1 month")
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        InlineKeyboardButton("💳 Оплатить", url=pay_url)
+        InlineKeyboardButton("💳 Оплатить", url=pay_url),
+        InlineKeyboardButton("🔄 Проверить оплату", callback_data="after1"),
+        InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
     await bot.send_message(
         callback_query.from_user.id,
-        "💎 Подписка на 1 месяц\n\nНажмите кнопку ниже для оплаты.",
+        "💳 Оплатите и затем нажмите «Проверить оплату»",
         reply_markup=keyboard
     )
 
 
+@dp.callback_query_handler(lambda c: c.data == "after1")
+async def after1(callback_query: types.CallbackQuery):
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton("✅ Подтвердить оплату", callback_data="check_pay_1"),
+        InlineKeyboardButton("⬅ Назад", callback_data="premium")
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        "Подтверди оплату",
+        reply_markup=keyboard
+    )
+
+
+# ===== SUB2 =====
 @dp.callback_query_handler(lambda c: c.data == "sub2")
 async def sub2(callback_query: types.CallbackQuery):
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton("💳 Перейти к оплате", callback_data="pay2"),
+        InlineKeyboardButton("⬅ Назад", callback_data="premium")
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        "💎 <b>Подписка на 2 месяца</b>\n\nСтоимость: 5 USDT",
+        parse_mode="HTML",
+        reply_markup=keyboard
+    )
+
+
+@dp.callback_query_handler(lambda c: c.data == "pay2")
+async def pay2(callback_query: types.CallbackQuery):
 
     pay_url = create_invoice(5, "WD Premium 2 months")
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        InlineKeyboardButton("💳 Оплатить", url=pay_url)
+        InlineKeyboardButton("💳 Оплатить", url=pay_url),
+        InlineKeyboardButton("🔄 Проверить оплату", callback_data="after2"),
+        InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
     await bot.send_message(
         callback_query.from_user.id,
-        "💎 Подписка на 2 месяца\n\nНажмите кнопку ниже для оплаты.",
+        "💳 Оплатите и затем нажмите «Проверить оплату»",
         reply_markup=keyboard
     )
 
 
+@dp.callback_query_handler(lambda c: c.data == "after2")
+async def after2(callback_query: types.CallbackQuery):
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton("✅ Подтвердить оплату", callback_data="check_pay_2"),
+        InlineKeyboardButton("⬅ Назад", callback_data="premium")
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        "Подтверди оплату",
+        reply_markup=keyboard
+    )
+
+
+# ===== SUB3 =====
 @dp.callback_query_handler(lambda c: c.data == "sub3")
 async def sub3(callback_query: types.CallbackQuery):
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton("💳 Перейти к оплате", callback_data="pay3"),
+        InlineKeyboardButton("⬅ Назад", callback_data="premium")
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        "💎 <b>Подписка на 3 месяца</b>\n\nСтоимость: 7 USDT",
+        parse_mode="HTML",
+        reply_markup=keyboard
+    )
+
+
+@dp.callback_query_handler(lambda c: c.data == "pay3")
+async def pay3(callback_query: types.CallbackQuery):
 
     pay_url = create_invoice(7, "WD Premium 3 months")
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        InlineKeyboardButton("💳 Оплатить", url=pay_url)
+        InlineKeyboardButton("💳 Оплатить", url=pay_url),
+        InlineKeyboardButton("🔄 Проверить оплату", callback_data="after3"),
+        InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
     await bot.send_message(
         callback_query.from_user.id,
-        "💎 Подписка на 3 месяца\n\nНажмите кнопку ниже для оплаты.",
+        "💳 Оплатите и затем нажмите «Проверить оплату»",
         reply_markup=keyboard
+    )
+
+
+@dp.callback_query_handler(lambda c: c.data == "after3")
+async def after3(callback_query: types.CallbackQuery):
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton("✅ Подтвердить оплату", callback_data="check_pay_3"),
+        InlineKeyboardButton("⬅ Назад", callback_data="premium")
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        "Подтверди оплату",
+        reply_markup=keyboard
+    )
+
+
+# ===== ПРОВЕРКА =====
+@dp.callback_query_handler(lambda c: c.data.startswith("check_pay"))
+async def check_payment(callback_query: types.CallbackQuery):
+
+    user = callback_query.from_user
+
+    tariff = {
+        "check_pay_1": "1 месяц",
+        "check_pay_2": "2 месяца",
+        "check_pay_3": "3 месяца"
+    }.get(callback_query.data, "неизвестно")
+
+    username = f"@{user.username}" if user.username else "без username"
+
+    await bot.send_message(
+        user.id,
+        "💎 Запрос на активацию принят.\n\nДоступ будет выдан в ближайшее время."
+    )
+
+    await bot.send_message(
+        ADMIN_ID,
+        f"💰 Новый запрос\n\nТариф: {tariff}\nПользователь: {username}\nID: {user.id}"
     )
 
 
