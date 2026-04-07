@@ -248,9 +248,17 @@ async def sub2(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "sub3")
 async def sub3(callback_query: types.CallbackQuery):
 
+    pay_url = create_invoice(6, "WD Premium 3 months")
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+        InlineKeyboardButton("💳 Оплатить", url=pay_url)
+    )
+
     await bot.send_message(
         callback_query.from_user.id,
-        "ТЫ НАЖАЛ 3 МЕСЯЦА"
+        "💎 Подписка на 3 месяца\n\nНажмите кнопку ниже для оплаты.",
+        reply_markup=keyboard
     )
 
 
