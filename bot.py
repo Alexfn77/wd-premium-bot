@@ -234,8 +234,12 @@ async def sub1(callback_query: types.CallbackQuery):
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
-    await bot.send_message(
-        callback_query.from_user.id,
+photo = InputFile("1month.jpg")
+
+await bot.send_photo(
+    callback_query.from_user.id,
+    photo,
+    caption=(
         "💎 <b>WD Premium — 1 месяц</b>\n\n"
 
         "Идеально, чтобы попробовать формат и погрузиться в атмосферу.\n\n"
@@ -249,10 +253,11 @@ async def sub1(callback_query: types.CallbackQuery):
         "⏳ Доступ: 30 дней\n"
         "💳 Стоимость: 3 USDT\n\n"
 
-        "<b>Начните знакомство с проектом.</b>",
-        parse_mode="HTML",
-        reply_markup=keyboard
-    )
+        "<b>Начните знакомство с проектом.</b>"
+    ),
+    parse_mode="HTML",
+    reply_markup=keyboard
+)
 
 
 @dp.callback_query_handler(lambda c: c.data == "pay1")
@@ -300,8 +305,12 @@ async def sub2(callback_query: types.CallbackQuery):
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
-    await bot.send_message(
-        callback_query.from_user.id,
+photo = InputFile("2months.jpg")
+
+await bot.send_photo(
+    callback_query.from_user.id,
+    photo,
+    caption=(
         "💎 <b>WD Premium — 2 месяца</b>\n\n"
 
         "Оптимальный выбор для тех, кто хочет больше контента и выгоды.\n\n"
@@ -316,10 +325,11 @@ async def sub2(callback_query: types.CallbackQuery):
         "⏳ Доступ: 60 дней\n"
         "💳 Стоимость: 5 USDT\n\n"
 
-        "💡 <i>Выгоднее, чем брать по одному месяцу.</i>",
-        parse_mode="HTML",
-        reply_markup=keyboard
-    )
+        "💡 <i>Выгоднее, чем брать по одному месяцу.</i>"
+    ),
+    parse_mode="HTML",
+    reply_markup=keyboard
+)
 
 
 @dp.callback_query_handler(lambda c: c.data == "pay2")
@@ -367,8 +377,12 @@ async def sub3(callback_query: types.CallbackQuery):
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
-    await bot.send_message(
-        callback_query.from_user.id,
+photo = InputFile("3months.jpg")
+
+await bot.send_photo(
+    callback_query.from_user.id,
+    photo,
+    caption=(
         "💎 <b>WD Premium — 3 месяца</b>\n\n"
 
         "Максимальный доступ и лучший вариант для постоянных участников.\n\n"
@@ -383,10 +397,11 @@ async def sub3(callback_query: types.CallbackQuery):
         "⏳ Доступ: 90 дней\n"
         "💳 Стоимость: 7 USDT\n\n"
 
-        "🔥 <b>Самый выгодный тариф</b>",
-        parse_mode="HTML",
-        reply_markup=keyboard
-     )
+        "🔥 <b>Самый выгодный тариф</b>"
+    ),
+    parse_mode="HTML",
+    reply_markup=keyboard
+)
 
 
 @dp.callback_query_handler(lambda c: c.data == "pay3")
