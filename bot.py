@@ -69,6 +69,8 @@ async def start(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data == "premium")
 async def premium(callback_query: types.CallbackQuery):
 
+    await callback_query.answer()
+
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("💎 1 месяц — 3 USDT", callback_data="sub1"),
@@ -82,14 +84,10 @@ async def premium(callback_query: types.CallbackQuery):
     text = (
         "💎 <b>WD Premium</b>\n"
         "<i>private members club</i>\n\n"
-
         "Закрытый доступ к самому откровенному контенту проекта WET DREAMS.\n\n"
-
         "Здесь нет ограничений —\n"
         "только то, что не публикуется в открытом доступе.\n\n"
-
         "Участники получают:\n\n"
-
         "🔒 эксклюзивные истории 18+\n"
         "🔥 максимально откровенный формат без цензуры\n"
         "⚡ доступ к новым публикациям раньше всех\n"
@@ -99,12 +97,17 @@ async def premium(callback_query: types.CallbackQuery):
         "🔔 закрытые анонсы\n\n"
         "✨ 1 персональная история в месяц\n"
         "(короткая, по вашей теме)\n\n"
-
         "💳 Оплата в USDT\n\n"
-
         "⏳ Доступ ограничен.\n\n"
-
         "<b>Выберите формат доступа.</b>"
+    )
+
+    await bot.send_photo(
+        callback_query.from_user.id,
+        photo,
+        caption=text,
+        parse_mode="HTML",
+        reply_markup=keyboard
     )
 
 
@@ -217,6 +220,8 @@ async def back(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "sub1")
 async def sub1(callback_query: types.CallbackQuery):
 
+    await callback_query.answer()
+
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         InlineKeyboardButton("💳 Перейти к оплате", callback_data="pay1"),
@@ -230,18 +235,14 @@ async def sub1(callback_query: types.CallbackQuery):
         photo,
         caption=(
             "💎 <b>WD Premium — 1 месяц</b>\n\n"
-
             "Идеально, чтобы попробовать формат и погрузиться в атмосферу.\n\n"
-
             "Вы получите:\n"
             "🔒 доступ ко всему Premium-контенту\n"
             "🔥 самые откровенные истории без цензуры\n"
             "⚡ ранний доступ к новым публикациям\n"
             "📖 бонусные сцены\n\n"
-
             "⏳ Доступ: 30 дней\n"
             "💳 Стоимость: 3 USDT\n\n"
-
             "<b>Начните знакомство с проектом.</b>"
         ),
         parse_mode="HTML",
@@ -288,6 +289,8 @@ async def after1(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "sub2")
 async def sub2(callback_query: types.CallbackQuery):
 
+    await callback_query.answer()
+
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         InlineKeyboardButton("💳 Перейти к оплате", callback_data="pay2"),
@@ -301,19 +304,15 @@ async def sub2(callback_query: types.CallbackQuery):
         photo,
         caption=(
             "💎 <b>WD Premium — 2 месяца</b>\n\n"
-
             "Оптимальный выбор для тех, кто хочет больше контента и выгоды.\n\n"
-
             "Вы получите:\n"
             "🔒 полный доступ ко всему Premium\n"
             "🔥 откровенный контент без ограничений\n"
             "⚡ ранние публикации\n"
             "📖 бонусные материалы\n"
             "✨ 1 персональная история\n\n"
-
             "⏳ Доступ: 60 дней\n"
             "💳 Стоимость: 5 USDT\n\n"
-
             "💡 <i>Выгоднее, чем брать по одному месяцу.</i>"
         ),
         parse_mode="HTML",
@@ -360,6 +359,8 @@ async def after2(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "sub3")
 async def sub3(callback_query: types.CallbackQuery):
 
+    await callback_query.answer()
+
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         InlineKeyboardButton("💳 Перейти к оплате", callback_data="pay3"),
@@ -373,19 +374,15 @@ async def sub3(callback_query: types.CallbackQuery):
         photo,
         caption=(
             "💎 <b>WD Premium — 3 месяца</b>\n\n"
-
             "Максимальный доступ и лучший вариант для постоянных участников.\n\n"
-
             "Вы получите:\n"
             "🔒 полный архив и весь Premium-контент\n"
             "🔥 самый откровенный формат проекта\n"
             "⚡ ранний доступ ко всем новинкам\n"
             "📖 бонусные сцены и истории\n"
             "✨ 3 персональные истории\n\n"
-
             "⏳ Доступ: 90 дней\n"
             "💳 Стоимость: 7 USDT\n\n"
-
             "🔥 <b>Самый выгодный тариф</b>"
         ),
         parse_mode="HTML",
