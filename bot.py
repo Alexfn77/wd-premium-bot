@@ -97,7 +97,6 @@ async def premium(callback_query: types.CallbackQuery):
         "🗳 влияние на будущие истории\n"
         "📖 бонусные сцены и мини-истории\n"
         "🔔 закрытые анонсы\n\n"
-
         "✨ 1 персональная история в месяц\n"
         "(короткая, по вашей теме)\n\n"
 
@@ -106,14 +105,6 @@ async def premium(callback_query: types.CallbackQuery):
         "⏳ Доступ ограничен.\n\n"
 
         "<b>Выберите формат доступа.</b>"
-    )
-
-    await bot.send_photo(
-        callback_query.from_user.id,
-        photo,
-        caption=text,
-        parse_mode="HTML",
-        reply_markup=keyboard
     )
 
 
