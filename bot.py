@@ -14,6 +14,8 @@ ADMIN_ID = 7733841337
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
+user_invoices = {}
+
 def create_invoice(amount, description):
     url = "https://pay.crypt.bot/api/createInvoice"
     headers = {
@@ -29,7 +31,7 @@ def create_invoice(amount, description):
     result = response.json()
 
     if result["ok"]:
-        return result["result"]["pay_url"]
+        return result["result"]
     else:
         return None
 
@@ -228,6 +230,7 @@ async def sub1(callback_query: types.CallbackQuery):
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
+
     photo = InputFile("1month.jpg")
 
     await bot.send_photo(
@@ -253,34 +256,25 @@ async def sub1(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "pay1")
 async def pay1(callback_query: types.CallbackQuery):
 
-    pay_url = create_invoice(3, "WD Premium 1 month")
+    await callback_query.answer()
+
+    invoice = create_invoice(3, "WD Premium 1 month")
+
+    pay_url = invoice["pay_url"]
+    invoice_id = invoice["invoice_id"]
+
+    user_invoices[callback_query.from_user.id] = invoice_id
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         InlineKeyboardButton("💳 Оплатить", url=pay_url),
-        InlineKeyboardButton("🔄 Проверить оплату", callback_data="after1"),
+        InlineKeyboardButton("🔄 Проверить оплату", callback_data="check_pay_1"),
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
     await bot.send_message(
         callback_query.from_user.id,
         "💳 Оплатите и затем нажмите «Проверить оплату»",
-        reply_markup=keyboard
-    )
-
-
-@dp.callback_query_handler(lambda c: c.data == "after1")
-async def after1(callback_query: types.CallbackQuery):
-
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(
-        InlineKeyboardButton("✅ Подтвердить оплату", callback_data="check_pay_1"),
-        InlineKeyboardButton("⬅ Назад", callback_data="premium")
-    )
-
-    await bot.send_message(
-        callback_query.from_user.id,
-        "Подтверди оплату",
         reply_markup=keyboard
     )
 
@@ -323,34 +317,25 @@ async def sub2(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "pay2")
 async def pay2(callback_query: types.CallbackQuery):
 
-    pay_url = create_invoice(5, "WD Premium 2 months")
+    await callback_query.answer()
+
+    invoice = create_invoice(5, "WD Premium 2 months")
+
+    pay_url = invoice["pay_url"]
+    invoice_id = invoice["invoice_id"]
+
+    user_invoices[callback_query.from_user.id] = invoice_id
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         InlineKeyboardButton("💳 Оплатить", url=pay_url),
-        InlineKeyboardButton("🔄 Проверить оплату", callback_data="after2"),
+        InlineKeyboardButton("🔄 Проверить оплату", callback_data="check_pay_2"),
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
     await bot.send_message(
         callback_query.from_user.id,
         "💳 Оплатите и затем нажмите «Проверить оплату»",
-        reply_markup=keyboard
-    )
-
-
-@dp.callback_query_handler(lambda c: c.data == "after2")
-async def after2(callback_query: types.CallbackQuery):
-
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(
-        InlineKeyboardButton("✅ Подтвердить оплату", callback_data="check_pay_2"),
-        InlineKeyboardButton("⬅ Назад", callback_data="premium")
-    )
-
-    await bot.send_message(
-        callback_query.from_user.id,
-        "Подтверди оплату",
         reply_markup=keyboard
     )
 
@@ -393,12 +378,19 @@ async def sub3(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "pay3")
 async def pay3(callback_query: types.CallbackQuery):
 
-    pay_url = create_invoice(7, "WD Premium 3 months")
+    await callback_query.answer()
+
+    invoice = create_invoice(7, "WD Premium 3 months")
+
+    pay_url = invoice["pay_url"]
+    invoice_id = invoice["invoice_id"]
+
+    user_invoices[callback_query.from_user.id] = invoice_id
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         InlineKeyboardButton("💳 Оплатить", url=pay_url),
-        InlineKeyboardButton("🔄 Проверить оплату", callback_data="after3"),
+        InlineKeyboardButton("🔄 Проверить оплату", callback_data="check_pay_3"),
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
@@ -409,45 +401,63 @@ async def pay3(callback_query: types.CallbackQuery):
     )
 
 
-@dp.callback_query_handler(lambda c: c.data == "after3")
-async def after3(callback_query: types.CallbackQuery):
-
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(
-        InlineKeyboardButton("✅ Подтвердить оплату", callback_data="check_pay_3"),
-        InlineKeyboardButton("⬅ Назад", callback_data="premium")
-    )
-
-    await bot.send_message(
-        callback_query.from_user.id,
-        "Подтверди оплату",
-        reply_markup=keyboard
-    )
-
-
 # ===== ПРОВЕРКА =====
 @dp.callback_query_handler(lambda c: c.data.startswith("check_pay"))
 async def check_payment(callback_query: types.CallbackQuery):
 
-    user = callback_query.from_user
+    await callback_query.answer()
 
-    tariff = {
-        "check_pay_1": "1 месяц",
-        "check_pay_2": "2 месяца",
-        "check_pay_3": "3 месяца"
-    }.get(callback_query.data, "неизвестно")
+    user_id = callback_query.from_user.id
 
-    username = f"@{user.username}" if user.username else "без username"
+    if user_id not in user_invoices:
+        await bot.send_message(user_id, "❌ Счёт не найден. Попробуйте заново.")
+        return
 
-    await bot.send_message(
-        user.id,
-        "💎 Запрос на активацию принят.\n\nДоступ будет выдан в ближайшее время."
-    )
+    invoice_id = user_invoices[user_id]
 
-    await bot.send_message(
-        ADMIN_ID,
-        f"💰 Новый запрос\n\nТариф: {tariff}\nПользователь: {username}\nID: {user.id}"
-    )
+    url = "https://pay.crypt.bot/api/getInvoices"
+    headers = {
+        "Crypto-Pay-API-Token": CRYPTO_TOKEN
+    }
+    params = {
+        "invoice_ids": invoice_id
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+    result = response.json()
+
+    if result["ok"]:
+        items = result["result"]["items"]
+
+        if not items:
+            await bot.send_message(user_id, "❌ Счёт не найден.")
+            return
+
+        invoice = items[0]
+
+        if invoice["status"] == "paid":
+
+            invite = await bot.create_chat_invite_link(
+                chat_id="@wetdreams_private",
+                member_limit=1
+            )
+
+            invite_link = invite.invite_link
+
+            await bot.send_message(
+                user_id,
+                f"💎 Оплата прошла успешно!\n\nВот ваш доступ:\n{invite_link}"
+            )
+
+            del user_invoices[user_id]
+
+        else:
+            await bot.send_message(
+                user_id,
+                "❌ Оплата не найдена. Если вы оплатили — подождите пару секунд и попробуйте снова."
+            )
+    else:
+        await bot.send_message(user_id, "❌ Ошибка проверки оплаты.")
 
 
 if __name__ == "__main__":
