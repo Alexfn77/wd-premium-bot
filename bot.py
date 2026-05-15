@@ -7,7 +7,7 @@ from aiogram.utils import executor
 
 # ===== ТОКЕНЫ =====
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-CRYPTO_TOKEN = "561572:AAdgX8dZ3dqWIUcIi2LBccNdRV0zBKZF497"
+CRYPTO_TOKEN = os.getenv("CRYPTO_TOKEN")
 ADMIN_ID = 7733841337
 
 # ===== ИНИЦИАЛИЗАЦИЯ =====
@@ -435,29 +435,28 @@ async def check_payment(callback_query: types.CallbackQuery):
 
         invoice = items[0]
 
-        if invoice["status"] == "paid":
 
-            invite = await bot.create_chat_invite_link(
-                chat_id="@wetdreams_private",
-                member_limit=1
-            )
+if invoice["status"] == "paid":
 
-            invite_link = invite.invite_link
+    invite = await bot.create_chat_invite_link(
+        chat_id=-1003888233811,
+        member_limit=1
+    )
 
-            await bot.send_message(
-                user_id,
-                f"💎 Оплата прошла успешно!\n\nВот ваш доступ:\n{invite_link}"
-            )
+    invite_link = invite.invite_link
 
-            del user_invoices[user_id]
+    await bot.send_message(
+        user_id,
+        f"💎 Оплата прошла успешно!\n\nВот ваш доступ:\n{invite_link}"
+    )
 
-        else:
-            await bot.send_message(
-                user_id,
-                "❌ Оплата не найдена. Если вы оплатили — подождите пару секунд и попробуйте снова."
-            )
-    else:
-        await bot.send_message(user_id, "❌ Ошибка проверки оплаты.")
+    del user_invoices[user_id]
+
+else:
+    await bot.send_message(
+        user_id,
+        "❌ Оплата не найдена. Если вы оплатили — подождите пару секунд и попробуйте снова."
+    )
 
 
 @dp.channel_post_handler()
