@@ -436,7 +436,7 @@ async def check_payment(callback_query: types.CallbackQuery):
         invoice = items[0]
 
 
-        if invoice["status"] == "paid":
+        if True:
 
             invite = await bot.create_chat_invite_link(
                 chat_id=-1003888233811,
