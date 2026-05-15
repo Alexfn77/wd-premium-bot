@@ -436,27 +436,27 @@ async def check_payment(callback_query: types.CallbackQuery):
         invoice = items[0]
 
 
-if invoice["status"] == "paid":
+        if invoice["status"] == "paid":
 
-    invite = await bot.create_chat_invite_link(
-        chat_id=-1003888233811,
-        member_limit=1
-    )
+            invite = await bot.create_chat_invite_link(
+                chat_id=-1003888233811,
+                member_limit=1
+            )
 
-    invite_link = invite.invite_link
+            invite_link = invite.invite_link
 
-    await bot.send_message(
-        user_id,
-        f"💎 Оплата прошла успешно!\n\nВот ваш доступ:\n{invite_link}"
-    )
+            await bot.send_message(
+                user_id,
+                f"💎 Оплата прошла успешно!\n\nВот ваш доступ:\n{invite_link}"
+            )
 
-    del user_invoices[user_id]
+            del user_invoices[user_id]
 
-else:
-    await bot.send_message(
-        user_id,
-        "❌ Оплата не найдена. Если вы оплатили — подождите пару секунд и попробуйте снова."
-    )
+        else:
+            await bot.send_message(
+                user_id,
+                "❌ Оплата не найдена. Если вы оплатили — подождите пару секунд и попробуйте снова."
+            )
 
 
 @dp.channel_post_handler()
