@@ -1,4 +1,5 @@
 import os
+import asyncio
 import requests
 import sqlite3
 from datetime import datetime, timedelta
@@ -22,10 +23,11 @@ cursor = conn.cursor()
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS subscriptions (
-    user_id INTEGER,
+    user_id INTEGER PRIMARY KEY,
     username TEXT,
     tariff TEXT,
-    end_date TEXT
+    end_date TEXT,
+    notified INTEGER DEFAULT 0
 )
 """)
 
@@ -115,8 +117,6 @@ async def premium(callback_query: types.CallbackQuery):
         "🗳 влияние на будущие истории\n"
         "📖 бонусные сцены и мини-истории\n"
         "🔔 закрытые анонсы\n\n"
-
-
         "✨ 1 персональная история в месяц\n"
         "(короткая, по вашей теме)\n\n"
         "💳 Оплата в USDT\n\n"
@@ -521,7 +521,97 @@ async def check_payment(callback_query: types.CallbackQuery):
 
 
 
+async def subscription_checker():
 
+    while True:
+
+        cursor.execute(
+            "SELECT user_id, end_date, notified FROM subscriptions"
+        )
+
+        subscriptions = cursor.fetchall()
+
+        now = datetime.now()
+
+        for sub in subscriptions:
+
+            user_id = sub[0]
+
+            end_date = datetime.strptime(
+                sub[1],
+                "%Y-%m-%d %H:%M:%S"
+            )
+
+            notified = sub[2]
+
+            remaining = end_date - now
+
+
+            # ===== НАПОМИНАНИЕ =====
+            if remaining.days <= 3 and notified == 0:
+
+                try:
+
+                    keyboard = InlineKeyboardMarkup()
+
+                    keyboard.add(
+                        InlineKeyboardButton(
+                            "💎 Продлить подписку",
+                            callback_data="premium"
+                        )
+                    )
+
+                    await bot.send_message(
+                        user_id,
+                        "⏳ Ваша подписка скоро закончится.\n\n"
+                        "Продлите доступ заранее.",
+                        reply_markup=keyboard
+                    )
+
+                    cursor.execute(
+                        "UPDATE subscriptions SET notified = 1 WHERE user_id = ?",
+                        (user_id,)
+                    )
+
+                    conn.commit()
+
+                except:
+                    pass
+
+
+            # ===== ЕСЛИ ПОДПИСКА КОНЧИЛАСЬ =====
+            if now >= end_date:
+
+                try:
+
+                    await bot.ban_chat_member(
+                        chat_id=-1003888233811,
+                        user_id=user_id
+                    )
+
+                    await bot.unban_chat_member(
+                        chat_id=-1003888233811,
+                        user_id=user_id
+                    )
+
+                    await bot.send_message(
+                        user_id,
+                        "❌ Ваша подписка закончилась."
+                    )
+
+                except:
+                    pass
+
+
+                cursor.execute(
+                    "DELETE FROM subscriptions WHERE user_id = ?",
+                    (user_id,)
+                )
+
+                conn.commit()
+
+
+        await asyncio.sleep(3600)
 
 
 @dp.channel_post_handler()
