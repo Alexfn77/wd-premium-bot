@@ -460,5 +460,10 @@ async def check_payment(callback_query: types.CallbackQuery):
         await bot.send_message(user_id, "❌ Ошибка проверки оплаты.")
 
 
+@dp.channel_post_handler()
+async def get_channel_id(message: types.Message):
+    print(message.chat.id)
+
+
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
