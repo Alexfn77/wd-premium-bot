@@ -1,5 +1,7 @@
 import os
 import requests
+import sqlite3
+from datetime import datetime, timedelta
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputFile
@@ -13,6 +15,22 @@ ADMIN_ID = 7733841337
 # ===== ИНИЦИАЛИЗАЦИЯ =====
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
+
+# ===== БАЗА ДАННЫХ =====
+conn = sqlite3.connect("database.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS subscriptions (
+    user_id INTEGER,
+    username TEXT,
+    tariff TEXT,
+    end_date TEXT
+)
+""")
+
+
+conn.commit()
 
 user_invoices = {}
 
@@ -97,6 +115,8 @@ async def premium(callback_query: types.CallbackQuery):
         "🗳 влияние на будущие истории\n"
         "📖 бонусные сцены и мини-истории\n"
         "🔔 закрытые анонсы\n\n"
+
+
         "✨ 1 персональная история в месяц\n"
         "(короткая, по вашей теме)\n\n"
         "💳 Оплата в USDT\n\n"
@@ -264,7 +284,11 @@ async def pay1(callback_query: types.CallbackQuery):
     pay_url = invoice["pay_url"]
     invoice_id = invoice["invoice_id"]
 
-    user_invoices[callback_query.from_user.id] = invoice_id
+    user_invoices[callback_query.from_user.id] = {
+        "invoice_id": invoice_id,
+        "type": "subscription",
+        "tariff": "1 месяц"
+    }
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
@@ -325,7 +349,11 @@ async def pay2(callback_query: types.CallbackQuery):
     pay_url = invoice["pay_url"]
     invoice_id = invoice["invoice_id"]
 
-    user_invoices[callback_query.from_user.id] = invoice_id
+    user_invoices[callback_query.from_user.id] = {
+        "invoice_id": invoice_id,
+        "type": "subscription",
+        "tariff": "2 месяца"
+    }
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
@@ -386,7 +414,11 @@ async def pay3(callback_query: types.CallbackQuery):
     pay_url = invoice["pay_url"]
     invoice_id = invoice["invoice_id"]
 
-    user_invoices[callback_query.from_user.id] = invoice_id
+    user_invoices[callback_query.from_user.id] = {
+        "invoice_id": invoice_id,
+        "type": "subscription",
+        "tariff": "3 месяца"
+    }
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
@@ -414,7 +446,8 @@ async def check_payment(callback_query: types.CallbackQuery):
         await bot.send_message(user_id, "❌ Счёт не найден. Попробуйте заново.")
         return
 
-    invoice_id = user_invoices[user_id]
+    invoice_data = user_invoices[user_id]
+    invoice_id = invoice_data["invoice_id"]
 
     url = "https://pay.crypt.bot/api/getInvoices"
     headers = {
@@ -436,8 +469,35 @@ async def check_payment(callback_query: types.CallbackQuery):
 
         invoice = items[0]
 
-
         if invoice["status"] == "paid":
+
+            # ===== ОПРЕДЕЛЯЕМ ТАРИФ =====
+            tariff = invoice_data["tariff"]
+
+            if tariff == "1 месяц":
+                days = 30
+
+            elif tariff == "2 месяца":
+                days = 60
+
+            else:
+                days = 90
+
+            # ===== ДАТА ОКОНЧАНИЯ =====
+            end_date = datetime.now() + timedelta(days=days)
+
+            # ===== СОХРАНЯЕМ В БАЗУ =====
+            cursor.execute(
+                "INSERT INTO subscriptions VALUES (?, ?, ?, ?)",
+                (
+                    user_id,
+                    callback_query.from_user.username,
+                    tariff,
+                    end_date.strftime("%Y-%m-%d %H:%M:%S")
+                )
+            )
+
+            conn.commit()
 
             invite = await bot.create_chat_invite_link(
                 chat_id=-1003888233811,
@@ -458,6 +518,10 @@ async def check_payment(callback_query: types.CallbackQuery):
                 user_id,
                 "❌ Оплата не найдена. Если вы оплатили — подождите пару секунд и попробуйте снова."
             )
+
+
+
+
 
 
 @dp.channel_post_handler()
