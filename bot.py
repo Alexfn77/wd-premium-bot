@@ -65,8 +65,8 @@ async def start(message: types.Message):
     keyboard.add(
         InlineKeyboardButton("💎 WD Premium", callback_data="premium"),
         InlineKeyboardButton("📖 Каталог", callback_data="catalog"),
-        InlineKeyboardButton("💎 Моя подписка", callback_data="my_sub"),
         InlineKeyboardButton("✨ История на заказ", callback_data="custom"),
+        InlineKeyboardButton("💎 Моя подписка", callback_data="my_sub"),
         InlineKeyboardButton("✉ Менеджер WD", url="https://t.me/Ki1iWD")
     )
 
