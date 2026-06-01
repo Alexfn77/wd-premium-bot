@@ -92,6 +92,7 @@ async def start(message: types.Message):
 async def premium(callback_query: types.CallbackQuery):
 
     await callback_query.answer()
+    await callback_query.message.delete()
 
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
@@ -137,6 +138,8 @@ async def premium(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "catalog")
 async def catalog(callback_query: types.CallbackQuery):
 
+    await callback_query.message.delete()
+
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("🔥 Ночное искушение", callback_data="story1"),
@@ -171,6 +174,7 @@ async def catalog(callback_query: types.CallbackQuery):
 # ===== ИСТОРИЯ 1 =====
 @dp.callback_query_handler(lambda c: c.data == "story1")
 async def story1(callback_query: types.CallbackQuery):
+    await callback_query.message.delete()
 
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
@@ -210,6 +214,8 @@ async def buy_story1(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "custom")
 async def custom(callback_query: types.CallbackQuery):
 
+    await callback_query.message.delete()
+
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
         InlineKeyboardButton("✍ Обсудить заказ", url="https://t.me/Ki1iWD"),
@@ -235,6 +241,9 @@ async def custom(callback_query: types.CallbackQuery):
 # ===== НАЗАД =====
 @dp.callback_query_handler(lambda c: c.data == "back")
 async def back(callback_query: types.CallbackQuery):
+
+    await callback_query.message.delete()
+
     await start(callback_query.message)
 
 
@@ -243,6 +252,7 @@ async def back(callback_query: types.CallbackQuery):
 async def sub1(callback_query: types.CallbackQuery):
 
     await callback_query.answer()
+    await callback_query.message.delete()
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
@@ -278,6 +288,7 @@ async def sub1(callback_query: types.CallbackQuery):
 async def pay1(callback_query: types.CallbackQuery):
 
     await callback_query.answer()
+    await callback_query.message.delete()
 
     invoice = create_invoice(3, "WD Premium 1 month")
 
@@ -309,6 +320,7 @@ async def pay1(callback_query: types.CallbackQuery):
 async def sub2(callback_query: types.CallbackQuery):
 
     await callback_query.answer()
+    await callback_query.message.delete()
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
@@ -343,6 +355,7 @@ async def sub2(callback_query: types.CallbackQuery):
 async def pay2(callback_query: types.CallbackQuery):
 
     await callback_query.answer()
+    await callback_query.message.delete()
 
     invoice = create_invoice(5, "WD Premium 2 months")
 
@@ -374,6 +387,7 @@ async def pay2(callback_query: types.CallbackQuery):
 async def sub3(callback_query: types.CallbackQuery):
 
     await callback_query.answer()
+    await callback_query.message.delete()
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
@@ -408,6 +422,7 @@ async def sub3(callback_query: types.CallbackQuery):
 async def pay3(callback_query: types.CallbackQuery):
 
     await callback_query.answer()
+    await callback_query.message.delete()
 
     invoice = create_invoice(7, "WD Premium 3 months")
 
@@ -439,6 +454,7 @@ async def pay3(callback_query: types.CallbackQuery):
 async def check_payment(callback_query: types.CallbackQuery):
 
     await callback_query.answer()
+    await callback_query.message.delete()
 
     user_id = callback_query.from_user.id
 
