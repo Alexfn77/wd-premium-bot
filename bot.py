@@ -671,3 +671,19 @@ async def subscribe_info(message: types.Message):
         f"{sub[1]}\n\n"
         f"Осталось дней: {remaining}"
     )
+
+
+@dp.channel_post_handler()
+async def get_channel_id(message: types.Message):
+    print(message.chat.id)
+
+
+if __name__ == "__main__":
+
+    print("BOT STARTING...")
+
+    loop = asyncio.get_event_loop()
+
+    loop.create_task(subscription_checker())
+
+    executor.start_polling(dp, skip_updates=True)
