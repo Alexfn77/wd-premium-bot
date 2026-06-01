@@ -488,13 +488,14 @@ async def check_payment(callback_query: types.CallbackQuery):
 
             # ===== СОХРАНЯЕМ В БАЗУ =====
             cursor.execute(
-                "INSERT INTO subscriptions VALUES (?, ?, ?, ?)",
+                "REPLACE INTO subscriptions VALUES (?, ?, ?, ?, ?)",
                 (
-                    user_id,
-                    callback_query.from_user.username,
-                    tariff,
-                    end_date.strftime("%Y-%m-%d %H:%M:%S")
-                )
+    user_id,
+    callback_query.from_user.username,
+    tariff,
+    end_date.strftime("%Y-%m-%d %H:%M:%S"),
+    0
+)
             )
 
             conn.commit()
@@ -620,4 +621,9 @@ async def get_channel_id(message: types.Message):
 
 
 if __name__ == "__main__":
+
+    loop = asyncio.get_event_loop()
+
+    loop.create_task(subscription_checker())
+
     executor.start_polling(dp, skip_updates=True)
