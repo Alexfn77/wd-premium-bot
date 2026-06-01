@@ -66,7 +66,7 @@ async def start(message: types.Message):
         InlineKeyboardButton("💎 WD Premium", callback_data="premium"),
         InlineKeyboardButton("📖 Каталог", callback_data="catalog"),
         InlineKeyboardButton("✨ История на заказ", callback_data="custom"),
-        InlineKeyboardButton("💎 Моя подписка", callback_data="my_sub"),
+        InlineKeyboardButton("👑 Моя подписка", callback_data="my_sub"),
         InlineKeyboardButton("✉ Менеджер WD", url="https://t.me/Ki1iWD")
     )
 
@@ -607,6 +607,13 @@ async def subscription_checker():
                         )
                     )
 
+                    keyboard.add(
+                        InlineKeyboardButton(
+                            "⬅ Назад",
+                            callback_data="back"
+                        )
+                    )
+
                     await bot.send_message(
                         user_id,
                         "⏳ Ваша подписка скоро закончится.\n\n"
@@ -720,6 +727,13 @@ async def my_subscription(callback_query: types.CallbackQuery):
             )
         )
 
+        keyboard.add(
+            InlineKeyboardButton(
+                "⬅ Назад",
+                callback_data="back"
+            )
+        )
+
         await bot.send_message(
             callback_query.from_user.id,
             "❌ У вас нет активной подписки.",
@@ -746,9 +760,16 @@ async def my_subscription(callback_query: types.CallbackQuery):
         )
     )
 
+    keyboard.add(
+        InlineKeyboardButton(
+            "⬅ Назад",
+            callback_data="back"
+        )
+    )
+
     await bot.send_message(
         callback_query.from_user.id,
-        f"💎 <b>WD Premium</b>\n\n"
+        f"👑 <b>WD Premium</b>\n\n"
         f"📦 Тариф: {tariff}\n\n"
         f"📅 Активна до:\n"
         f"{sub[1]}\n\n"
