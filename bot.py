@@ -61,9 +61,11 @@ def create_invoice(amount, description):
 async def start(message: types.Message):
 
     keyboard = InlineKeyboardMarkup(row_width=1)
+
     keyboard.add(
         InlineKeyboardButton("💎 WD Premium", callback_data="premium"),
         InlineKeyboardButton("📖 Каталог", callback_data="catalog"),
+        InlineKeyboardButton("💎 Моя подписка", callback_data="my_sub"),
         InlineKeyboardButton("✨ История на заказ", callback_data="custom"),
         InlineKeyboardButton("✉ Менеджер WD", url="https://t.me/Ki1iWD")
     )
@@ -138,6 +140,7 @@ async def premium(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "catalog")
 async def catalog(callback_query: types.CallbackQuery):
 
+    await callback_query.answer()
     await callback_query.message.delete()
 
     keyboard = InlineKeyboardMarkup(row_width=1)
@@ -174,6 +177,8 @@ async def catalog(callback_query: types.CallbackQuery):
 # ===== ИСТОРИЯ 1 =====
 @dp.callback_query_handler(lambda c: c.data == "story1")
 async def story1(callback_query: types.CallbackQuery):
+
+    await callback_query.answer()
     await callback_query.message.delete()
 
     keyboard = InlineKeyboardMarkup(row_width=1)
@@ -214,6 +219,7 @@ async def buy_story1(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "custom")
 async def custom(callback_query: types.CallbackQuery):
 
+    await callback_query.answer()
     await callback_query.message.delete()
 
     keyboard = InlineKeyboardMarkup()
@@ -242,6 +248,7 @@ async def custom(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == "back")
 async def back(callback_query: types.CallbackQuery):
 
+    await callback_query.answer()
     await callback_query.message.delete()
 
     await start(callback_query.message)
@@ -686,6 +693,68 @@ async def subscribe_info(message: types.Message):
         f"Действует до:\n"
         f"{sub[1]}\n\n"
         f"Осталось дней: {remaining}"
+    )
+
+
+@dp.callback_query_handler(lambda c: c.data == "my_sub")
+async def my_subscription(callback_query: types.CallbackQuery):
+
+    await callback_query.answer()
+    await callback_query.message.delete()
+
+    cursor.execute(
+        "SELECT tariff, end_date FROM subscriptions WHERE user_id = ?",
+        (callback_query.from_user.id,)
+    )
+
+    sub = cursor.fetchone()
+
+    if not sub:
+
+        keyboard = InlineKeyboardMarkup()
+
+        keyboard.add(
+            InlineKeyboardButton(
+                "💎 Купить подписку",
+                callback_data="premium"
+            )
+        )
+
+        await bot.send_message(
+            callback_query.from_user.id,
+            "❌ У вас нет активной подписки.",
+            reply_markup=keyboard
+        )
+
+        return
+
+    tariff = sub[0]
+
+    end_date = datetime.strptime(
+        sub[1],
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    remaining = (end_date - datetime.now()).days
+
+    keyboard = InlineKeyboardMarkup()
+
+    keyboard.add(
+        InlineKeyboardButton(
+            "💎 Продлить подписку",
+            callback_data="premium"
+        )
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        f"💎 <b>WD Premium</b>\n\n"
+        f"📦 Тариф: {tariff}\n\n"
+        f"📅 Активна до:\n"
+        f"{sub[1]}\n\n"
+        f"⏳ Осталось дней: {remaining}",
+        parse_mode="HTML",
+        reply_markup=keyboard
     )
 
 
