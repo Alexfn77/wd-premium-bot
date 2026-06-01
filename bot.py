@@ -483,19 +483,40 @@ async def check_payment(callback_query: types.CallbackQuery):
             else:
                 days = 90
 
-            # ===== ДАТА ОКОНЧАНИЯ =====
-            end_date = datetime.now() + timedelta(days=days)
+            # ===== ПРОВЕРЯЕМ СУЩЕСТВУЮЩУЮ ПОДПИСКУ =====
+            cursor.execute(
+                "SELECT end_date FROM subscriptions WHERE user_id = ?",
+                (user_id,)
+            )
+
+            existing = cursor.fetchone()
+
+            if existing:
+
+                current_end = datetime.strptime(
+                    existing[0],
+                    "%Y-%m-%d %H:%M:%S"
+                )
+
+                if current_end > datetime.now():
+                    end_date = current_end + timedelta(days=days)
+
+                else:
+                    end_date = datetime.now() + timedelta(days=days)
+
+            else:
+                end_date = datetime.now() + timedelta(days=days)
 
             # ===== СОХРАНЯЕМ В БАЗУ =====
             cursor.execute(
                 "REPLACE INTO subscriptions VALUES (?, ?, ?, ?, ?)",
                 (
-    user_id,
-    callback_query.from_user.username,
-    tariff,
-    end_date.strftime("%Y-%m-%d %H:%M:%S"),
-    0
-)
+                    user_id,
+                    callback_query.from_user.username,
+                    tariff,
+                    end_date.strftime("%Y-%m-%d %H:%M:%S"),
+                    0
+                )
             )
 
             conn.commit()
@@ -515,6 +536,7 @@ async def check_payment(callback_query: types.CallbackQuery):
             del user_invoices[user_id]
 
         else:
+
             await bot.send_message(
                 user_id,
                 "❌ Оплата не найдена. Если вы оплатили — подождите пару секунд и попробуйте снова."
