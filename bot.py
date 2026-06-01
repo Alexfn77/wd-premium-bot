@@ -637,15 +637,37 @@ async def subscription_checker():
         await asyncio.sleep(3600)
 
 
-@dp.channel_post_handler()
-async def get_channel_id(message: types.Message):
-    print(message.chat.id)
+@dp.message_handler(commands=["subscribe"])
+async def subscribe_info(message: types.Message):
 
+    cursor.execute(
+        "SELECT tariff, end_date FROM subscriptions WHERE user_id = ?",
+        (message.from_user.id,)
+    )
 
-if __name__ == "__main__":
+    sub = cursor.fetchone()
 
-    loop = asyncio.get_event_loop()
+    if not sub:
 
-    loop.create_task(subscription_checker())
+        await message.answer(
+            "❌ У вас нет активной подписки."
+        )
 
-    executor.start_polling(dp, skip_updates=True)
+        return
+
+    tariff = sub[0]
+
+    end_date = datetime.strptime(
+        sub[1],
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    remaining = (end_date - datetime.now()).days
+
+    await message.answer(
+        f"💎 WD Premium\n\n"
+        f"Тариф: {tariff}\n\n"
+        f"Действует до:\n"
+        f"{sub[1]}\n\n"
+        f"Осталось дней: {remaining}"
+    )
