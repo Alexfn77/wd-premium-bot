@@ -558,12 +558,30 @@ async def check_payment(callback_query: types.CallbackQuery):
 
             del user_invoices[user_id]
 
-        else:
+else:
+    keyboard = InlineKeyboardMarkup()
 
-            await bot.send_message(
-                user_id,
-                "❌ Оплата не найдена. Если вы оплатили — подождите пару секунд и попробуйте снова."
-            )
+    keyboard.add(
+        InlineKeyboardButton(
+            "🔄 Проверить оплату",
+            callback_data="check_payment"
+        )
+    )
+
+    keyboard.add(
+        InlineKeyboardButton(
+            "⬅ Назад",
+            callback_data="back"
+        )
+    )
+
+    await bot.send_message(
+        user_id,
+        "❌ Оплата не найдена.\n\n"
+        "Если вы уже оплатили — подождите несколько секунд "
+        "и попробуйте проверить оплату ещё раз.",
+        reply_markup=keyboard
+    )
 
 
 
