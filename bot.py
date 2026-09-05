@@ -466,125 +466,208 @@ async def check_payment(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
 
     if user_id not in user_invoices:
-        await bot.send_message(user_id, "❌ Счёт не найден. Попробуйте заново.")
+        keyboard = InlineKeyboardMarkup()
+
+        keyboard.add(
+            InlineKeyboardButton(
+                "💎 Купить подписку",
+                callback_data="premium"
+            )
+        )
+
+        keyboard.add(
+            InlineKeyboardButton(
+                "⬅ Назад",
+                callback_data="back"
+            )
+        )
+
+        await bot.send_message(
+            user_id,
+            "❌ Счёт не найден. Попробуйте создать новый.",
+            reply_markup=keyboard
+        )
         return
 
     invoice_data = user_invoices[user_id]
     invoice_id = invoice_data["invoice_id"]
 
     url = "https://pay.crypt.bot/api/getInvoices"
+
     headers = {
         "Crypto-Pay-API-Token": CRYPTO_TOKEN
     }
+
     params = {
         "invoice_ids": invoice_id
     }
 
-    response = requests.get(url, headers=headers, params=params)
+    response = requests.get(
+        url,
+        headers=headers,
+        params=params
+    )
+
     result = response.json()
 
-    if result["ok"]:
-        items = result["result"]["items"]
+    if not result["ok"]:
 
-        if not items:
-            await bot.send_message(user_id, "❌ Счёт не найден.")
-            return
+        keyboard = InlineKeyboardMarkup()
 
-        invoice = items[0]
-
-        if invoice["status"] == "paid":
-
-            # ===== ОПРЕДЕЛЯЕМ ТАРИФ =====
-            tariff = invoice_data["tariff"]
-
-            if tariff == "1 месяц":
-                days = 30
-
-            elif tariff == "2 месяца":
-                days = 60
-
-            else:
-                days = 90
-
-            # ===== ПРОВЕРЯЕМ СУЩЕСТВУЮЩУЮ ПОДПИСКУ =====
-            cursor.execute(
-                "SELECT end_date FROM subscriptions WHERE user_id = ?",
-                (user_id,)
+        keyboard.add(
+            InlineKeyboardButton(
+                "🔄 Проверить оплату",
+                callback_data="check_payment"
             )
+        )
 
-            existing = cursor.fetchone()
-
-            if existing:
-
-                current_end = datetime.strptime(
-                    existing[0],
-                    "%Y-%m-%d %H:%M:%S"
-                )
-
-                if current_end > datetime.now():
-                    end_date = current_end + timedelta(days=days)
-
-                else:
-                    end_date = datetime.now() + timedelta(days=days)
-
-            else:
-                end_date = datetime.now() + timedelta(days=days)
-
-            # ===== СОХРАНЯЕМ В БАЗУ =====
-            cursor.execute(
-                "REPLACE INTO subscriptions VALUES (?, ?, ?, ?, ?)",
-                (
-                    user_id,
-                    callback_query.from_user.username,
-                    tariff,
-                    end_date.strftime("%Y-%m-%d %H:%M:%S"),
-                    0
-                )
+        keyboard.add(
+            InlineKeyboardButton(
+                "⬅ Назад",
+                callback_data="back"
             )
+        )
 
-            conn.commit()
+        await bot.send_message(
+            user_id,
+            "⚠️ Не удалось проверить оплату.\n\n"
+            "Попробуйте ещё раз через несколько секунд.",
+            reply_markup=keyboard
+        )
 
-            invite = await bot.create_chat_invite_link(
-                chat_id=-1003888233811,
-                member_limit=1
+        return
+
+    items = result["result"]["items"]
+
+    if not items:
+
+        keyboard = InlineKeyboardMarkup()
+
+        keyboard.add(
+            InlineKeyboardButton(
+                "🔄 Проверить оплату",
+                callback_data="check_payment"
             )
+        )
 
-            invite_link = invite.invite_link
-
-            await bot.send_message(
-                user_id,
-                f"💎 Оплата прошла успешно!\n\nВот ваш доступ:\n{invite_link}"
+        keyboard.add(
+            InlineKeyboardButton(
+                "⬅ Назад",
+                callback_data="back"
             )
+        )
 
-            del user_invoices[user_id]
+        await bot.send_message(
+            user_id,
+            "❌ Счёт не найден.\n\n"
+            "Попробуйте создать новый счёт.",
+            reply_markup=keyboard
+        )
 
-else:
-    keyboard = InlineKeyboardMarkup()
+        return
 
-    keyboard.add(
-        InlineKeyboardButton(
-            "🔄 Проверить оплату",
-            callback_data="check_payment"
+    invoice = items[0]
+
+    if invoice["status"] != "paid":
+
+        keyboard = InlineKeyboardMarkup()
+
+        keyboard.add(
+            InlineKeyboardButton(
+                "🔄 Проверить оплату",
+                callback_data="check_payment"
+            )
+        )
+
+        keyboard.add(
+            InlineKeyboardButton(
+                "⬅ Назад",
+                callback_data="back"
+            )
+        )
+
+        await bot.send_message(
+            user_id,
+            "❌ Оплата не найдена.\n\n"
+            "Если вы уже оплатили — подождите несколько секунд "
+            "и попробуйте проверить оплату ещё раз.",
+            reply_markup=keyboard
+        )
+
+        return
+
+    # ===== ОПЛАТА УСПЕШНА =====
+
+    tariff = invoice_data["tariff"]
+
+    if tariff == "1 месяц":
+        days = 30
+
+    elif tariff == "2 месяца":
+        days = 60
+
+    else:
+        days = 90
+
+    # ===== ПРОВЕРЯЕМ СУЩЕСТВУЮЩУЮ ПОДПИСКУ =====
+
+    cursor.execute(
+        "SELECT end_date FROM subscriptions WHERE user_id = ?",
+        (user_id,)
+    )
+
+    existing = cursor.fetchone()
+
+    if existing:
+
+        current_end = datetime.strptime(
+            existing[0],
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        if current_end > datetime.now():
+            end_date = current_end + timedelta(days=days)
+
+        else:
+            end_date = datetime.now() + timedelta(days=days)
+
+    else:
+        end_date = datetime.now() + timedelta(days=days)
+
+    # ===== СОХРАНЯЕМ В БАЗУ =====
+
+    cursor.execute(
+        "REPLACE INTO subscriptions VALUES (?, ?, ?, ?, ?)",
+        (
+            user_id,
+            callback_query.from_user.username,
+            tariff,
+            end_date.strftime("%Y-%m-%d %H:%M:%S"),
+            0
         )
     )
 
-    keyboard.add(
-        InlineKeyboardButton(
-            "⬅ Назад",
-            callback_data="back"
-        )
+    conn.commit()
+
+    # ===== СОЗДАЁМ ССЫЛКУ В КАНАЛ =====
+
+    invite = await bot.create_chat_invite_link(
+        chat_id=-1003888233811,
+        member_limit=1
     )
+
+    invite_link = invite.invite_link
 
     await bot.send_message(
         user_id,
-        "❌ Оплата не найдена.\n\n"
-        "Если вы уже оплатили — подождите несколько секунд "
-        "и попробуйте проверить оплату ещё раз.",
-        reply_markup=keyboard
+        f"💎 Оплата прошла успешно!\n\n"
+        f"Вот ваш доступ:\n{invite_link}"
     )
 
+    del user_invoices[user_id]
 
 
+# ===== ПРОВЕРКА ПОДПИСОК =====
 async def subscription_checker():
 
     while True:
@@ -610,9 +693,9 @@ async def subscription_checker():
 
             remaining = end_date - now
 
-
             # ===== НАПОМИНАНИЕ =====
-            if remaining.days <= 3 and notified == 0:
+
+            if remaining > timedelta(0) and remaining <= timedelta(days=3) and notified == 0:
 
                 try:
 
@@ -649,8 +732,8 @@ async def subscription_checker():
                 except:
                     pass
 
-
             # ===== ЕСЛИ ПОДПИСКА КОНЧИЛАСЬ =====
+
             if now >= end_date:
 
                 try:
@@ -673,7 +756,6 @@ async def subscription_checker():
                 except:
                     pass
 
-
                 cursor.execute(
                     "DELETE FROM subscriptions WHERE user_id = ?",
                     (user_id,)
@@ -681,8 +763,8 @@ async def subscription_checker():
 
                 conn.commit()
 
-
         await asyncio.sleep(3600)
+
 
 
 @dp.message_handler(commands=["subscribe"])
