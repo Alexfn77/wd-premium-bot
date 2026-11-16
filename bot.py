@@ -47,6 +47,15 @@ CREATE TABLE IF NOT EXISTS star_orders (
 )
 """)
 
+# Сохраняем ID сообщения со счётом, чтобы удалить его после успешной оплаты.
+existing_columns = {
+    row[1] for row in cursor.execute("PRAGMA table_info(star_orders)").fetchall()
+}
+if "invoice_chat_id" not in existing_columns:
+    cursor.execute("ALTER TABLE star_orders ADD COLUMN invoice_chat_id INTEGER")
+if "invoice_message_id" not in existing_columns:
+    cursor.execute("ALTER TABLE star_orders ADD COLUMN invoice_message_id INTEGER")
+
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS star_payments (
     charge_id TEXT PRIMARY KEY,
@@ -726,7 +735,7 @@ async def create_stars_invoice(callback_query: types.CallbackQuery, plan_key: st
     )
     conn.commit()
 
-    await bot.send_invoice(
+    invoice_message = await bot.send_invoice(
         chat_id=user_id,
         title=f"WD Premium — {plan['tariff']}",
         description=f"Доступ к WD Premium на {plan['days']} дней",
@@ -740,6 +749,14 @@ async def create_stars_invoice(callback_query: types.CallbackQuery, plan_key: st
             )
         ]
     )
+
+    cursor.execute(
+        """UPDATE star_orders
+           SET invoice_chat_id = ?, invoice_message_id = ?
+           WHERE payload = ?""",
+        (invoice_message.chat.id, invoice_message.message_id, payload)
+    )
+    conn.commit()
 
 
 @dp.callback_query_handler(lambda c: c.data in STAR_TARIFFS)
@@ -817,7 +834,8 @@ async def process_successful_payment(message: types.Message):
     user_id = message.from_user.id
 
     cursor.execute(
-        """SELECT tariff, days, amount, status, user_id
+        """SELECT tariff, days, amount, status, user_id,
+                  invoice_chat_id, invoice_message_id
            FROM star_orders WHERE payload = ?""",
         (payload,)
     )
@@ -829,7 +847,10 @@ async def process_successful_payment(message: types.Message):
         )
         return
 
-    tariff, days, expected_amount, status, order_user_id = order
+    (
+        tariff, days, expected_amount, status, order_user_id,
+        invoice_chat_id, invoice_message_id
+    ) = order
 
     if (
         payment.currency != "XTR"
@@ -871,6 +892,14 @@ async def process_successful_payment(message: types.Message):
         (payload,)
     )
     conn.commit()
+
+    # Удаляем сообщение со Stars-счётом после подтверждённой оплаты.
+    if invoice_chat_id and invoice_message_id:
+        try:
+            await bot.delete_message(invoice_chat_id, invoice_message_id)
+        except Exception:
+            # Ошибка удаления не должна мешать выдаче оплаченного доступа.
+            pass
 
     # Продлеваем текущую подписку или создаём новую
     cursor.execute(
