@@ -3,6 +3,7 @@ import asyncio
 import requests
 import sqlite3
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputFile
@@ -32,6 +33,29 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 """)
 
 
+conn.commit()
+
+# Заказы Telegram Stars и защита от повторной обработки платежей
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS star_orders (
+    payload TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    tariff TEXT NOT NULL,
+    days INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending'
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS star_payments (
+    charge_id TEXT PRIMARY KEY,
+    payload TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+    paid_at TEXT NOT NULL
+)
+""")
 conn.commit()
 
 user_invoices = {}
@@ -98,9 +122,9 @@ async def premium(callback_query: types.CallbackQuery):
 
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
-        InlineKeyboardButton("💎 1 месяц — 3 USDT", callback_data="sub1"),
-        InlineKeyboardButton("💎 2 месяца — 5 USDT", callback_data="sub2"),
-        InlineKeyboardButton("💎 3 месяца — 7 USDT", callback_data="sub3"),
+        InlineKeyboardButton("💎 1 месяц — 190 ⭐ / 3 USDT", callback_data="sub1"),
+        InlineKeyboardButton("💎 2 месяца — 310 ⭐ / 5 USDT", callback_data="sub2"),
+        InlineKeyboardButton("💎 3 месяца — 465 ⭐ / 7 USDT", callback_data="sub3"),
         InlineKeyboardButton("⬅ Назад", callback_data="back")
     )
 
@@ -122,7 +146,7 @@ async def premium(callback_query: types.CallbackQuery):
         "🔔 закрытые анонсы\n\n"
         "✨ 1 персональная история в месяц\n"
         "(короткая, по вашей теме)\n\n"
-        "💳 Оплата в USDT\n\n"
+        "💳 Оплата в Telegram Stars или USDT\n\n"
         "⏳ Доступ ограничен.\n\n"
         "<b>Выберите формат доступа.</b>"
     )
@@ -263,7 +287,8 @@ async def sub1(callback_query: types.CallbackQuery):
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        InlineKeyboardButton("💳 Перейти к оплате", callback_data="pay1"),
+        InlineKeyboardButton("⭐ Оплатить 190 Stars", callback_data="stars1"),
+        InlineKeyboardButton("💳 Оплатить 3 USDT", callback_data="pay1"),
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
@@ -283,7 +308,7 @@ async def sub1(callback_query: types.CallbackQuery):
             "📖 бонусные сцены и истории\n"
             "✨ 1 персональная история\n\n"
             "⏳ Доступ: 30 дней\n"
-            "💳 Стоимость: 3 USDT\n\n"
+            "💳 Стоимость: 190 ⭐ или 3 USDT\n\n"
             "<b>Начните знакомство с проектом.</b>"
         ),
         parse_mode="HTML",
@@ -298,6 +323,9 @@ async def pay1(callback_query: types.CallbackQuery):
     await callback_query.message.delete()
 
     invoice = create_invoice(3, "WD Premium 1 month")
+    if not invoice:
+        await bot.send_message(callback_query.from_user.id, "Не удалось создать счёт CryptoBot. Попробуйте позже.")
+        return
 
     pay_url = invoice["pay_url"]
     invoice_id = invoice["invoice_id"]
@@ -331,7 +359,8 @@ async def sub2(callback_query: types.CallbackQuery):
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        InlineKeyboardButton("💳 Перейти к оплате", callback_data="pay2"),
+        InlineKeyboardButton("⭐ Оплатить 310 Stars", callback_data="stars2"),
+        InlineKeyboardButton("💳 Оплатить 5 USDT", callback_data="pay2"),
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
@@ -350,7 +379,7 @@ async def sub2(callback_query: types.CallbackQuery):
             "📖 бонусные сцены и истории\n"
             "✨ 2 персональные истории\n\n"
             "⏳ Доступ: 60 дней\n"
-            "💳 Стоимость: 5 USDT\n\n"
+            "💳 Стоимость: 310 ⭐ или 5 USDT\n\n"
             "💡 <i>Выгоднее, чем брать по одному месяцу.</i>"
         ),
         parse_mode="HTML",
@@ -365,6 +394,9 @@ async def pay2(callback_query: types.CallbackQuery):
     await callback_query.message.delete()
 
     invoice = create_invoice(5, "WD Premium 2 months")
+    if not invoice:
+        await bot.send_message(callback_query.from_user.id, "Не удалось создать счёт CryptoBot. Попробуйте позже.")
+        return
 
     pay_url = invoice["pay_url"]
     invoice_id = invoice["invoice_id"]
@@ -398,7 +430,8 @@ async def sub3(callback_query: types.CallbackQuery):
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        InlineKeyboardButton("💳 Перейти к оплате", callback_data="pay3"),
+        InlineKeyboardButton("⭐ Оплатить 465 Stars", callback_data="stars3"),
+        InlineKeyboardButton("💳 Оплатить 7 USDT", callback_data="pay3"),
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
@@ -417,7 +450,7 @@ async def sub3(callback_query: types.CallbackQuery):
             "📖 бонусные сцены и истории\n"
             "✨ 3 персональная истории\n\n"
             "⏳ Доступ: 90 дней\n"
-            "💳 Стоимость: 7 USDT\n\n"
+            "💳 Стоимость: 465 ⭐ или 7 USDT\n\n"
             "🔥 <b>Самый выгодный тариф</b>"
         ),
         parse_mode="HTML",
@@ -432,6 +465,9 @@ async def pay3(callback_query: types.CallbackQuery):
     await callback_query.message.delete()
 
     invoice = create_invoice(7, "WD Premium 3 months")
+    if not invoice:
+        await bot.send_message(callback_query.from_user.id, "Не удалось создать счёт CryptoBot. Попробуйте позже.")
+        return
 
     pay_url = invoice["pay_url"]
     invoice_id = invoice["invoice_id"]
@@ -667,6 +703,184 @@ async def check_payment(callback_query: types.CallbackQuery):
     del user_invoices[user_id]
 
 
+# ===== TELEGRAM STARS =====
+
+STAR_TARIFFS = {
+    "stars1": {"tariff": "1 месяц", "days": 30, "amount": 190},
+    "stars2": {"tariff": "2 месяца", "days": 60, "amount": 310},
+    "stars3": {"tariff": "3 месяца", "days": 90, "amount": 465},
+}
+
+
+async def create_stars_invoice(callback_query: types.CallbackQuery, plan_key: str):
+    plan = STAR_TARIFFS[plan_key]
+    user_id = callback_query.from_user.id
+
+    # Уникальный payload связывает конкретный счёт с пользователем и тарифом
+    payload = f"wd:{user_id}:{plan_key}:{uuid4().hex[:12]}"
+
+    cursor.execute(
+        """INSERT INTO star_orders (payload, user_id, tariff, days, amount, status)
+           VALUES (?, ?, ?, ?, ?, 'pending')""",
+        (payload, user_id, plan["tariff"], plan["days"], plan["amount"])
+    )
+    conn.commit()
+
+    await bot.send_invoice(
+        chat_id=user_id,
+        title=f"WD Premium — {plan['tariff']}",
+        description=f"Доступ к WD Premium на {plan['days']} дней",
+        payload=payload,
+        provider_token="",
+        currency="XTR",
+        prices=[
+            types.LabeledPrice(
+                label=f"WD Premium — {plan['tariff']}",
+                amount=plan["amount"]
+            )
+        ]
+    )
+
+
+@dp.callback_query_handler(lambda c: c.data in STAR_TARIFFS)
+async def stars_payment_start(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    await create_stars_invoice(callback_query, callback_query.data)
+
+
+@dp.pre_checkout_query_handler(lambda query: True)
+async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
+    cursor.execute(
+        """SELECT user_id, amount, status
+           FROM star_orders WHERE payload = ?""",
+        (pre_checkout_query.invoice_payload,)
+    )
+    order = cursor.fetchone()
+
+    if (
+        order
+        and order[0] == pre_checkout_query.from_user.id
+        and order[1] == pre_checkout_query.total_amount
+        and pre_checkout_query.currency == "XTR"
+        and order[2] == "pending"
+    ):
+        await bot.answer_pre_checkout_query(
+            pre_checkout_query.id,
+            ok=True
+        )
+    else:
+        await bot.answer_pre_checkout_query(
+            pre_checkout_query.id,
+            ok=False,
+            error_message="Счёт недействителен или уже обработан. Создайте новый."
+        )
+
+
+@dp.message_handler(content_types=types.ContentType.SUCCESSFUL_PAYMENT)
+async def process_successful_payment(message: types.Message):
+    payment = message.successful_payment
+    payload = payment.invoice_payload
+    user_id = message.from_user.id
+
+    cursor.execute(
+        """SELECT tariff, days, amount, status, user_id
+           FROM star_orders WHERE payload = ?""",
+        (payload,)
+    )
+    order = cursor.fetchone()
+
+    if not order:
+        await message.answer(
+            "Платёж получен, но заказ не найден. Напишите менеджеру WD: @Ki1iWD"
+        )
+        return
+
+    tariff, days, expected_amount, status, order_user_id = order
+
+    if (
+        payment.currency != "XTR"
+        or payment.total_amount != expected_amount
+        or order_user_id != user_id
+    ):
+        await message.answer(
+            "Не удалось автоматически сверить платёж. Напишите менеджеру WD: @Ki1iWD"
+        )
+        return
+
+    # Повторное обновление подписки по одному и тому же платежу запрещено
+    cursor.execute(
+        "SELECT 1 FROM star_payments WHERE charge_id = ?",
+        (payment.telegram_payment_charge_id,)
+    )
+    if cursor.fetchone():
+        await message.answer("Этот платёж уже был обработан.")
+        return
+
+    if status != "pending":
+        await message.answer("Этот заказ уже обработан.")
+        return
+
+    cursor.execute(
+        """INSERT INTO star_payments
+           (charge_id, payload, user_id, amount, paid_at)
+           VALUES (?, ?, ?, ?, ?)""",
+        (
+            payment.telegram_payment_charge_id,
+            payload,
+            user_id,
+            payment.total_amount,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
+    )
+    cursor.execute(
+        "UPDATE star_orders SET status = 'paid' WHERE payload = ?",
+        (payload,)
+    )
+    conn.commit()
+
+    # Продлеваем текущую подписку или создаём новую
+    cursor.execute(
+        "SELECT end_date FROM subscriptions WHERE user_id = ?",
+        (user_id,)
+    )
+    existing = cursor.fetchone()
+
+    if existing:
+        current_end = datetime.strptime(existing[0], "%Y-%m-%d %H:%M:%S")
+        if current_end > datetime.now():
+            end_date = current_end + timedelta(days=days)
+        else:
+            end_date = datetime.now() + timedelta(days=days)
+    else:
+        end_date = datetime.now() + timedelta(days=days)
+
+    cursor.execute(
+        "REPLACE INTO subscriptions VALUES (?, ?, ?, ?, ?)",
+        (
+            user_id,
+            message.from_user.username,
+            tariff,
+            end_date.strftime("%Y-%m-%d %H:%M:%S"),
+            0
+        )
+    )
+    conn.commit()
+
+    # Создаём персональную ссылку на один вход
+    invite = await bot.create_chat_invite_link(
+        chat_id=-1003888233811,
+        member_limit=1
+    )
+
+    await message.answer(
+        "⭐ <b>Оплата Telegram Stars прошла успешно!</b>\n\n"
+        f"Тариф: {tariff}\n"
+        f"Доступ действует до: {end_date.strftime('%d.%m.%Y %H:%M')}\n\n"
+        f"Ваша ссылка для входа:\n{invite.invite_link}",
+        parse_mode="HTML"
+    )
+
+
 # ===== ПРОВЕРКА ПОДПИСОК =====
 async def subscription_checker():
 
@@ -765,6 +979,22 @@ async def subscription_checker():
 
         await asyncio.sleep(3600)
 
+
+
+@dp.message_handler(commands=["paysupport"])
+async def payment_support(message: types.Message):
+    await message.answer(
+        "По вопросам оплаты WD Premium напишите менеджеру: @Ki1iWD"
+    )
+
+
+@dp.message_handler(commands=["terms"])
+async def terms(message: types.Message):
+    await message.answer(
+        "Условия WD Premium: после подтверждения оплаты доступ предоставляется "
+        "на выбранный срок. По вопросам доступа, возврата или спорных платежей "
+        "напишите менеджеру WD: @Ki1iWD"
+    )
 
 
 @dp.message_handler(commands=["subscribe"])
