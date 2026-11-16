@@ -741,6 +741,18 @@ async def create_stars_invoice(callback_query: types.CallbackQuery, plan_key: st
         ]
     )
 
+    # У счёта Telegram Stars может быть только штатная кнопка оплаты.
+    # Поэтому возврат размещаем отдельным сообщением под счётом.
+    back_keyboard = InlineKeyboardMarkup(row_width=1)
+    back_keyboard.add(
+        InlineKeyboardButton("⬅ Назад к тарифам", callback_data="premium")
+    )
+    await bot.send_message(
+        user_id,
+        "Передумали? Можно вернуться к выбору тарифа.",
+        reply_markup=back_keyboard
+    )
+
 
 @dp.callback_query_handler(lambda c: c.data in STAR_TARIFFS)
 async def stars_payment_start(callback_query: types.CallbackQuery):
