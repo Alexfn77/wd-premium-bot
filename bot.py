@@ -780,8 +780,12 @@ async def stars_payment_start(callback_query: types.CallbackQuery):
 
     await bot.send_message(
         callback_query.from_user.id,
-        f"<b>{plan['amount']} ⭐ СЧЁТ</b>\\n"
-        f"Доступ к WD Premium на {plan['days']} дней",
+        f"<b>✦ WD PREMIUM ✦</b>\\n"
+        f"<i>PRIVATE MEMBERS CLUB</i>\\n\\n"
+        f"<b>{plan['amount']} ⭐</b>\\n"
+        f"<b>ДОСТУП НА {plan['days']} ДНЕЙ</b>\\n\\n"
+        f"Эксклюзивные истории, закрытый архив и особенный контент WD Premium.\\n"
+        f"<i>Ваше личное пространство начинается здесь.</i>",
         parse_mode="HTML",
         reply_markup=keyboard
     )
