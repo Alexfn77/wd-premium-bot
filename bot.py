@@ -166,9 +166,9 @@ async def premium(callback_query: types.CallbackQuery):
 
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
-        InlineKeyboardButton("💎 1 месяц — 190 ⭐ / 3 USDT", callback_data="sub1"),
-        InlineKeyboardButton("💎 2 месяца — 310 ⭐ / 5 USDT", callback_data="sub2"),
-        InlineKeyboardButton("💎 3 месяца — 465 ⭐ / 7 USDT", callback_data="sub3"),
+        InlineKeyboardButton("💎 1 месяц — 170 ₽ / 190 ⭐ / 3 USDT", callback_data="sub1"),
+        InlineKeyboardButton("💎 2 месяца — 280 ₽ / 310 ⭐ / 5 USDT", callback_data="sub2"),
+        InlineKeyboardButton("💎 3 месяца — 490 ₽ / 465 ⭐ / 7 USDT", callback_data="sub3"),
         InlineKeyboardButton("⬅ Назад", callback_data="back")
     )
 
@@ -190,7 +190,7 @@ async def premium(callback_query: types.CallbackQuery):
         "🔔 закрытые анонсы\n\n"
         "✨ 1 персональная история в месяц\n"
         "(короткая, по вашей теме)\n\n"
-        "💳 Оплата в Telegram Stars или USDT\n\n"
+        "💳 Оплата: ₽ ЮMoney / ⭐ Telegram Stars / USDT\n\n"
         "⏳ Доступ ограничен.\n\n"
         "<b>Выберите формат доступа.</b>"
     )
@@ -331,9 +331,9 @@ async def sub1(callback_query: types.CallbackQuery):
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
+        InlineKeyboardButton("₽ Оплатить 170 ₽", callback_data="ym1"),
         InlineKeyboardButton("⭐ Оплатить 190 Stars", callback_data="stars1"),
         InlineKeyboardButton("💳 Оплатить 3 USDT", callback_data="pay1"),
-        InlineKeyboardButton("₽ Оплатить 170 ₽", callback_data="ym1"),
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
@@ -404,9 +404,9 @@ async def sub2(callback_query: types.CallbackQuery):
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
+        InlineKeyboardButton("₽ Оплатить 280 ₽", callback_data="ym2"),
         InlineKeyboardButton("⭐ Оплатить 310 Stars", callback_data="stars2"),
         InlineKeyboardButton("💳 Оплатить 5 USDT", callback_data="pay2"),
-        InlineKeyboardButton("₽ Оплатить 280 ₽", callback_data="ym2"),
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
@@ -476,9 +476,9 @@ async def sub3(callback_query: types.CallbackQuery):
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
+        InlineKeyboardButton("₽ Оплатить 490 ₽", callback_data="ym3"),
         InlineKeyboardButton("⭐ Оплатить 465 Stars", callback_data="stars3"),
         InlineKeyboardButton("💳 Оплатить 7 USDT", callback_data="pay3"),
-        InlineKeyboardButton("₽ Оплатить 490 ₽", callback_data="ym3"),
         InlineKeyboardButton("⬅ Назад", callback_data="premium")
     )
 
