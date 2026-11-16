@@ -1546,12 +1546,43 @@ async def get_channel_id(message: types.Message):
     print(message.chat.id)
 
 
-if __name__ == "__main__":
+async def resilient_polling():
+    """
+    Получает обновления Telegram и переживает временные сетевые ошибки
+    (например, HTTP 502 Bad Gateway), не завершая работу всего приложения.
+    """
+    offset = None
 
+    while True:
+        try:
+            updates = await bot.get_updates(
+                offset=offset,
+                timeout=30
+            )
+
+            if updates:
+                # Сразу продвигаем offset, чтобы Telegram не присылал
+                # уже полученные обновления повторно.
+                offset = updates[-1].update_id + 1
+                await dp.process_updates(updates)
+
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            print(f"Telegram polling error: {type(exc).__name__}: {exc}")
+            print("Повторное подключение к Telegram через 5 секунд...")
+            await asyncio.sleep(5)
+
+
+async def main():
     print("BOT STARTING...")
+    await on_startup(dp)
 
-    executor.start_polling(
-        dp,
-        skip_updates=True,
-        on_startup=on_startup
-    )
+    try:
+        await resilient_polling()
+    finally:
+        await bot.session.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
