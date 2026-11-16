@@ -741,23 +741,45 @@ async def create_stars_invoice(callback_query: types.CallbackQuery, plan_key: st
         ]
     )
 
-    # У счёта Telegram Stars может быть только штатная кнопка оплаты.
-    # Поэтому возврат размещаем отдельным сообщением под счётом.
-    back_keyboard = InlineKeyboardMarkup(row_width=1)
-    back_keyboard.add(
-        InlineKeyboardButton("⬅ Назад к тарифам", callback_data="premium")
-    )
-    await bot.send_message(
-        user_id,
-        "Передумали? Можно вернуться к выбору тарифа.",
-        reply_markup=back_keyboard
-    )
-
 
 @dp.callback_query_handler(lambda c: c.data in STAR_TARIFFS)
 async def stars_payment_start(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    await create_stars_invoice(callback_query, callback_query.data)
+
+    plan = STAR_TARIFFS[callback_query.data]
+    await callback_query.message.delete()
+
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        InlineKeyboardButton(
+            "⭐ Оплатить",
+            callback_data=f"stars_pay:{callback_query.data}"
+        ),
+        InlineKeyboardButton(
+            "⬅ Назад",
+            callback_data="premium"
+        )
+    )
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        f"<b>{plan['amount']} ⭐ СЧЁТ</b>\\n"
+        f"Доступ к WD Premium на {plan['days']} дней",
+        parse_mode="HTML",
+        reply_markup=keyboard
+    )
+
+
+@dp.callback_query_handler(lambda c: c.data.startswith("stars_pay:"))
+async def stars_payment_invoice(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    plan_key = callback_query.data.split(":", 1)[1]
+
+    if plan_key not in STAR_TARIFFS:
+        return
+
+    await callback_query.message.delete()
+    await create_stars_invoice(callback_query, plan_key)
 
 
 @dp.pre_checkout_query_handler(lambda query: True)
